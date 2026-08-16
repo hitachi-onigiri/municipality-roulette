@@ -1,0 +1,499 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    text-align: center;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 26px;
+    margin: 0 0 4px;
+    flex-shrink: 0;
+}
+
+/* 画面を左右2分割。地図の下端と履歴/お気に入りの上端がそろうよう、
+   「地図・フィルタ+結果」を1段目、「履歴/お気に入り」を2段目に配置するグリッド */
+#layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+        "map    topright"
+        "map    records";
+    gap: 24px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: left;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#leftPane {
+    grid-area: map;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* rightPane自体は箱を作らず、中の topRight / recordsWrap を
+   #layout のグリッドに直接配置する */
+#rightPane {
+    display: contents;
+}
+
+#topRight {
+    grid-area: topright;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    text-align: left;
+}
+
+/* 地図：画面の高さに収まるようにビューポート単位で上限を設ける */
+#mapWrap {
+    width: 100%;
+    max-width: 520px;
+    max-height: 82vh;
+    margin: 0 auto;
+}
+
+#japanMap {
+    width: 100%;
+    height: auto;
+    max-height: 82vh;
+    display: block;
+    overflow: visible;
+}
+
+#japanMap .prefecture {
+    fill: #e3e3e3;
+    stroke: #ffffff;
+    stroke-width: 1;
+    stroke-linejoin: round;
+    transition: fill 0.12s ease, transform 0.25s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+/* ルーレット中に高速で切り替わるハイライト */
+#japanMap .prefecture.active {
+    fill: #ff7a59;
+}
+
+/* 最終結果に着地したときの、その場で少し拡大して2回/秒で点滅する演出（当選感）
+   ※ 都道府県の<g>要素には地図上の位置を決めるtranslateが付いているため、
+   そのままCSSのtransformを当てると位置がリセットされて左上にズレてしまう。
+   なので拡大・点滅は中の図形（polygon/path）側に適用し、位置決めのtranslateには触れない。 */
+#japanMap .prefecture.landed polygon,
+#japanMap .prefecture.landed path {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(1.3);
+    animation: blinkLanded 0.5s steps(1, end) infinite;
+}
+
+@keyframes blinkLanded {
+    0%, 49% {
+        fill: #ff4d4d;
+    }
+
+    50%, 100% {
+        fill: #ffd400;
+    }
+}
+
+/* フィルタ */
+#filters {
+    display: block;
+    text-align: left;
+    background: #f4f4f4;
+    border-radius: 12px;
+    padding: 16px 24px;
+    width: 100%;
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.filter-row label,
+.filter-label {
+    width: 70px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.filter-row select {
+    font-size: 16px;
+    padding: 4px 8px;
+}
+
+.type-checkboxes {
+    display: flex;
+    gap: 14px;
+}
+
+.type-checkboxes label {
+    width: auto;
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mode-radios {
+    display: flex;
+    gap: 16px;
+}
+
+.mode-radios label {
+    width: auto;
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+/* 「都道府県だけ」モードのときは市区町村用の絞り込みを使えなくする */
+#cityOnlyFilters.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+#matchCount {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: #666;
+}
+
+/* 結果カードとルーレットボタンを横並びにする */
+#resultRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+#result {
+    flex: 1;
+    min-width: 0;
+    margin: 4px 0;
+    text-align: left;
+}
+
+#resultPref {
+    font-size: 14px;
+    color: #fff;
+    background: #ff5a5f;
+    display: inline-block;
+    padding: 2px 12px;
+    border-radius: 999px;
+    margin: 0 0 6px;
+}
+
+#resultKana {
+    font-size: 16px;
+    color: #777;
+    margin: 0 0 2px;
+}
+
+#resultName {
+    font-size: 38px;
+    font-weight: bold;
+    margin: 0;
+}
+
+#resultRomaji {
+    font-size: 18px;
+    color: #777;
+    margin: 6px 0 0;
+    letter-spacing: 0.5px;
+}
+
+/* お気に入り・共有ボタン */
+#resultActions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+#resultActions button {
+    width: auto;
+    font-size: 14px;
+    padding: 8px 16px;
+    background: #fff;
+    color: #444;
+    border: 1px solid #ccc;
+}
+
+#resultActions button:hover:not(:disabled) {
+    background: #f2f2f2;
+}
+
+#favoriteButton.is-favorited {
+    background: #fff3cd;
+    border-color: #ffcd39;
+    color: #8a6100;
+}
+
+#shareStatus {
+    font-size: 12px;
+    color: #888;
+    margin: 6px 0 0;
+    min-height: 1.4em;
+}
+
+button {
+    font-size: 18px;
+    padding: 13px 26px;
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+#rouletteButton {
+    background: #ff5a5f;
+    color: white;
+    width: auto;
+    flex-shrink: 0;
+    padding: 22px 40px;
+    font-size: 20px;
+}
+
+#rouletteButton:hover:not(:disabled) {
+    background: #ff787c;
+}
+
+/* キーボード操作のフォーカスを分かりやすく */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 履歴・お気に入り（タブ切り替え式）
+   グリッドの2段目に配置。1段目（地図・フィルタ+結果）の下端＝この上端になる */
+#recordsWrap {
+    grid-area: records;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    background: #f9f9f9;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#recordsTabs {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.tabBtn {
+    flex: 1;
+    width: auto;
+    padding: 10px 8px;
+    font-size: 14px;
+    font-weight: bold;
+    background: transparent;
+    color: #888;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.tabBtn.active {
+    color: #ff5a5f;
+    background: #ffffff;
+    box-shadow: inset 0 -2px 0 #ff5a5f;
+}
+
+.tabPanel {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px 20px;
+}
+
+.tabPanel.active {
+    display: block;
+}
+
+.empty-msg {
+    font-size: 13px;
+    color: #999;
+    margin: 4px 0;
+}
+
+#historyList {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 14px;
+    color: #333;
+}
+
+#historyList li {
+    margin-bottom: 4px;
+}
+
+#historyList li .h-romaji {
+    color: #888;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+#favoritesList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: #333;
+}
+
+#favoritesList li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+}
+
+#favoritesList li:last-child {
+    border-bottom: none;
+}
+
+#favoritesList li .f-name {
+    flex: 1;
+}
+
+#favoritesList li .f-romaji {
+    color: #888;
+    font-size: 12px;
+}
+
+#favoritesList li button {
+    width: auto;
+    padding: 2px 8px;
+    font-size: 12px;
+    background: transparent;
+    color: #999;
+    border: none;
+}
+
+#favoritesList li button:hover {
+    color: #d33;
+}
+
+/* 画面が狭いときは上下に積む。
+   ただし地図・結果・ルーレットボタンは「地図の下端に結果カードを重ねる」ことで
+   全体の高さを圧縮し、フィルタや履歴は下にスクロールして見る形にする */
+@media (max-width: 780px) {
+    body {
+        overflow-y: auto;
+    }
+
+    #layout {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #leftPane {
+        position: relative;
+        z-index: 1;
+    }
+
+    #mapWrap,
+    #japanMap {
+        max-height: 46vh;
+    }
+
+    /* デスクトップではグリッドに直接配置するため display:contents にしていたが、
+       スマホでは rightPane 自身が縦積みのフレックスコンテナに戻る必要がある */
+    #rightPane {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        gap: 10px;
+    }
+
+    /* topRight（フィルタ+結果のまとまり）も分解して、
+       filters と resultRow を rightPane の直接の子として order で並べ替えられるようにする */
+    #topRight {
+        display: contents;
+    }
+
+    /* フレックスの order で見た目の並びだけを
+       「結果カード → ルーレットボタン → フィルタ → 履歴/お気に入り」に変更する
+       （HTML/JSの構造やIDはそのまま） */
+    #filters {
+        order: 2;
+    }
+
+    #resultRow {
+        order: 1;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        position: relative;
+        z-index: 2;
+        margin-top: -80px;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 18px 18px 0 0;
+        padding: 16px 20px 16px;
+        box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    #result {
+        text-align: center;
+        margin: 0;
+    }
+
+    #resultActions {
+        justify-content: center;
+    }
+
+    #rouletteButton {
+        width: 100%;
+        padding: 13px 26px;
+        font-size: 18px;
+    }
+
+    #recordsWrap {
+        order: 3;
+        flex: none;
+        min-height: 0;
+    }
+
+    .tabPanel {
+        max-height: 240px;
+    }
+}
