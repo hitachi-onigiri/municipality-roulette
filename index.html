@@ -6,6 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>全国1741市町村ルーレット</title>
+    <meta name="description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。地方・都道府県・種別で絞り込みもできます。">
+
+    <!-- OGP（X/LINE/Facebookなどでシェアされたときの表示）
+         ↓ 公開後、og:image と twitter:image は
+         https://ユーザー名.github.io/リポジトリ名/images/ogp.png のような
+         絶対URLに書き換えてください（相対パスだと反映されないSNSがあります） -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="全国1741市町村ルーレット">
+    <meta property="og:description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。">
+    <meta property="og:image" content="images/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+
+    <!-- Twitter/X Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="全国1741市町村ルーレット">
+    <meta name="twitter:description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。">
+    <meta name="twitter:image" content="images/ogp.png">
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -245,6 +262,8 @@
         <div id="rightPane">
             <div id="topRight">
             <div id="filters">
+                <button id="soundToggleBtn" type="button" aria-pressed="true">🔊 音 ON</button>
+
                 <div class="filter-row">
                     <span class="filter-label">抽選対象</span>
                     <div class="mode-radios">
@@ -302,6 +321,12 @@
                         <button id="shareButton" type="button" disabled>🔗 共有</button>
                     </div>
                     <p id="shareStatus" role="status" aria-live="polite">&nbsp;</p>
+
+                    <div id="searchLinks">
+                        <button id="searchTourismBtn" type="button" disabled>🗺️ 観光</button>
+                        <button id="searchFoodBtn" type="button" disabled>🍜 グルメ</button>
+                        <button id="searchLodgingBtn" type="button" disabled>🏨 宿泊</button>
+                    </div>
                 </div>
 
                 <button id="rouletteButton">ルーレットを回す</button>

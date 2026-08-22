@@ -84,12 +84,32 @@ h1 {
     stroke: #ffffff;
     stroke-width: 1;
     stroke-linejoin: round;
-    transition: fill 0.12s ease, transform 0.25s ease;
+    cursor: pointer;
+    transition: fill 0.12s ease, transform 0.25s ease, filter 0.12s ease;
     transform-box: fill-box;
     transform-origin: center;
 }
 
-/* ルーレット中に高速で切り替わるハイライト */
+#japanMap .prefecture:hover {
+    filter: brightness(0.93);
+}
+
+/* 地方ごとの薄い色分け（JSでdata-codeから地方を判定してクラスを付与） */
+#japanMap .prefecture.region-0 { fill: #cfe3fb; } /* 北海道 */
+#japanMap .prefecture.region-1 { fill: #d7f0d5; } /* 東北 */
+#japanMap .prefecture.region-2 { fill: #ffe6bf; } /* 関東 */
+#japanMap .prefecture.region-3 { fill: #ffd3e2; } /* 中部 */
+#japanMap .prefecture.region-4 { fill: #e3d6fb; } /* 近畿 */
+#japanMap .prefecture.region-5 { fill: #fff6b8; } /* 中国 */
+#japanMap .prefecture.region-6 { fill: #c9f3e6; } /* 四国 */
+#japanMap .prefecture.region-7 { fill: #ffd0d0; } /* 九州・沖縄 */
+
+/* 地方セレクトで選択中の地方を地図上でも分かるように縁取り */
+#japanMap .prefecture.region-selected {
+    stroke: #555;
+    stroke-width: 2;
+}
+
 #japanMap .prefecture.active {
     fill: #ff7a59;
 }
@@ -118,12 +138,36 @@ h1 {
 
 /* フィルタ */
 #filters {
+    position: relative;
     display: block;
     text-align: left;
     background: #f4f4f4;
     border-radius: 12px;
-    padding: 16px 24px;
+    padding: 40px 24px 16px;
     width: 100%;
+}
+
+/* 音のON/OFF切り替え */
+#soundToggleBtn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: auto;
+    font-size: 12px;
+    padding: 5px 12px;
+    background: #fff;
+    color: #444;
+    border: 1px solid #ccc;
+}
+
+#soundToggleBtn:hover {
+    background: #f2f2f2;
+}
+
+#soundToggleBtn.muted {
+    background: #eaeaea;
+    color: #999;
+    border-color: #ddd;
 }
 
 .filter-row {
@@ -260,6 +304,27 @@ h1 {
     color: #888;
     margin: 6px 0 0;
     min-height: 1.4em;
+}
+
+/* 観光/グルメ/宿泊の検索ボタン */
+#searchLinks {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#searchLinks button {
+    width: auto;
+    font-size: 13px;
+    padding: 7px 14px;
+    background: #eef6ff;
+    color: #1a5fa8;
+    border: 1px solid #bcdcff;
+}
+
+#searchLinks button:hover:not(:disabled) {
+    background: #dcecff;
 }
 
 button {
@@ -479,6 +544,11 @@ button:disabled {
 
     #resultActions {
         justify-content: center;
+    }
+
+    #searchLinks {
+        justify-content: center;
+        flex-wrap: wrap;
     }
 
     #rouletteButton {

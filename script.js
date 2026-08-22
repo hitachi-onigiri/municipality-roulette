@@ -14,6 +14,9 @@ const historyList = document.getElementById("historyList");
 const favoriteButton = document.getElementById("favoriteButton");
 const shareButton = document.getElementById("shareButton");
 const shareStatus = document.getElementById("shareStatus");
+const searchTourismBtn = document.getElementById("searchTourismBtn");
+const searchFoodBtn = document.getElementById("searchFoodBtn");
+const searchLodgingBtn = document.getElementById("searchLodgingBtn");
 const favoritesList = document.getElementById("favoritesList");
 const favoritesEmpty = document.getElementById("favoritesEmpty");
 const historyEmpty = document.getElementById("historyEmpty");
@@ -22,10 +25,31 @@ const tabPanels = document.querySelectorAll(".tabPanel");
 const modeCityRadio = document.getElementById("modeCity");
 const modePrefRadio = document.getElementById("modePref");
 const cityOnlyFilters = document.getElementById("cityOnlyFilters");
+const soundToggleBtn = document.getElementById("soundToggleBtn");
 
 // 都道府県名 -> 地図SVGの data-code の対応表（PREF_NAMESの並び順=コード1〜47から自動生成）
 const prefCodeMap = {};
 PREF_NAMES.forEach((name, i) => { prefCodeMap[name] = i + 1; });
+
+// ----- 音のON/OFF（ブラウザに保存され、次回開いたときも設定が残る） -----
+const SOUND_KEY = "municipalityRouletteSoundEnabled";
+let soundEnabled = true;
+try {
+    const savedSound = localStorage.getItem(SOUND_KEY);
+    if (savedSound !== null) soundEnabled = savedSound === "1";
+} catch (e) { /* 保存を読めない環境では既定値(ON)のまま */ }
+
+function updateSoundButton() {
+    soundToggleBtn.textContent = soundEnabled ? "🔊 音 ON" : "🔇 音 OFF";
+    soundToggleBtn.classList.toggle("muted", !soundEnabled);
+    soundToggleBtn.setAttribute("aria-pressed", String(soundEnabled));
+}
+
+soundToggleBtn.addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    try { localStorage.setItem(SOUND_KEY, soundEnabled ? "1" : "0"); } catch (e) { /* 無視 */ }
+    updateSoundButton();
+});
 
 // ----- 効果音（Web Audio API。音声ファイル不要） -----
 let audioCtx = null;
@@ -39,6 +63,7 @@ function getAudioCtx() {
 }
 
 function playTick(freq) {
+    if (!soundEnabled) return;
     try {
         const ctx = getAudioCtx();
         const osc = ctx.createOscillator();
@@ -54,6 +79,7 @@ function playTick(freq) {
 }
 
 function playLandingChime() {
+    if (!soundEnabled) return;
     try {
         const ctx = getAudioCtx();
         const notes = [880, 1108.7, 1318.5]; // ラ・ド#・ミ の軽い和音アルペジオ
@@ -155,16 +181,54 @@ function updateStatus() {
     button.disabled = filtered.length === 0;
 }
 
-// 地方が変わったら都道府県リストを作り直す
+// 地方が変わったら都道府県リストを作り直す（地図クリックからの変更もここを通る）
 regionSelect.addEventListener("change", () => {
     buildPrefOptions(regionSelect.value);
     updateStatus();
+    updateRegionHighlight();
 });
 
 prefSelect.addEventListener("change", updateStatus);
 typeChecks.forEach(c => c.addEventListener("change", updateStatus));
 
-// ----- 地図ハイライト -----
+// ----- 地図：地方ごとの色分け＆クリックで絞り込み -----
+
+// regionSelectのoption並び = PREF_REGIONの値と対応させるための一覧
+const REGION_LIST = ["北海道", "東北", "関東", "中部", "近畿", "中国", "四国", "九州・沖縄"];
+
+// 各都道府県<g>に、属する地方に応じたクラス(region-0〜7)を付与する
+function applyRegionColors() {
+    japanMap.querySelectorAll(".prefecture[data-code]").forEach(el => {
+        const code = parseInt(el.getAttribute("data-code"), 10);
+        const region = PREF_REGION[code - 1];
+        const idx = REGION_LIST.indexOf(region);
+        if (idx >= 0) el.classList.add(`region-${idx}`);
+    });
+}
+
+// 地方セレクトの現在値に合わせて、地図上の該当地方を縁取りする
+function updateRegionHighlight() {
+    const selected = regionSelect.value;
+    japanMap.querySelectorAll(".prefecture[data-code]").forEach(el => {
+        const code = parseInt(el.getAttribute("data-code"), 10);
+        const region = PREF_REGION[code - 1];
+        el.classList.toggle("region-selected", !!selected && region === selected);
+    });
+}
+
+// 地図の都道府県をクリックすると、その地方が「地方」フィルタに反映される
+japanMap.addEventListener("click", (e) => {
+    if (button.disabled) return; // ルーレット回転中はクリックを無視
+    const g = e.target.closest(".prefecture");
+    if (!g) return;
+    const code = parseInt(g.getAttribute("data-code"), 10);
+    const region = PREF_REGION[code - 1];
+    if (!region) return;
+    regionSelect.value = region;
+    regionSelect.dispatchEvent(new Event("change"));
+});
+
+// ----- 地図ハイライト（ルーレット演出用） -----
 
 function highlightPref(prefName, className) {
     japanMap.querySelectorAll(".prefecture.active, .prefecture.landed")
@@ -196,6 +260,9 @@ function showResult(picked) {
     resultRomaji.textContent = picked.romaji;
     favoriteButton.disabled = false;
     shareButton.disabled = false;
+    searchTourismBtn.disabled = false;
+    searchFoodBtn.disabled = false;
+    searchLodgingBtn.disabled = false;
     shareStatus.textContent = "\u00A0";
     updateFavoriteButtonState();
 }
@@ -209,6 +276,9 @@ function clearResult(text) {
     resultRomaji.textContent = "\u00A0";
     favoriteButton.disabled = true;
     shareButton.disabled = true;
+    searchTourismBtn.disabled = true;
+    searchFoodBtn.disabled = true;
+    searchLodgingBtn.disabled = true;
     favoriteButton.classList.remove("is-favorited");
     shareStatus.textContent = "\u00A0";
 }
@@ -362,6 +432,23 @@ async function shareResult() {
 
 shareButton.addEventListener("click", shareResult);
 
+// ----- 観光・グルメ・宿泊の検索リンク -----
+function buildSearchUrl(item, keyword) {
+    const q = item.pref === item.name
+        ? `${item.name} ${keyword}`
+        : `${item.pref} ${item.name} ${keyword}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+}
+
+function openSearch(keyword) {
+    if (!currentPick) return;
+    window.open(buildSearchUrl(currentPick, keyword), "_blank", "noopener,noreferrer");
+}
+
+searchTourismBtn.addEventListener("click", () => openSearch("観光"));
+searchFoodBtn.addEventListener("click", () => openSearch("グルメ"));
+searchLodgingBtn.addEventListener("click", () => openSearch("宿泊"));
+
 // ----- ルーレット本体 -----
 
 // ルーレットのように高速→減速しながら地図上をピコピコ切り替えて、最後に結果へ着地する
@@ -369,6 +456,9 @@ function spinRoulette(filtered, finalPick) {
     button.disabled = true;
     favoriteButton.disabled = true;
     shareButton.disabled = true;
+    searchTourismBtn.disabled = true;
+    searchFoodBtn.disabled = true;
+    searchLodgingBtn.disabled = true;
     favoriteButton.classList.remove("is-favorited");
     shareStatus.textContent = "\u00A0";
 
@@ -443,3 +533,6 @@ applyMode();
 updateStatus();
 renderHistory();
 renderFavorites();
+updateSoundButton();
+applyRegionColors();
+updateRegionHighlight();
