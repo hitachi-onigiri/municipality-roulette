@@ -1,5 +1,14 @@
 // municipalities.js で定義された `municipalities` 配列を使用する
 
+// ----- GA4イベント計測（gtagが読み込まれていない/ブロックされていても安全に無視する） -----
+function trackEvent(name, params) {
+    try {
+        if (typeof gtag === "function") {
+            gtag("event", name, params || {});
+        }
+    } catch (e) { /* 計測に失敗しても機能自体は止めない */ }
+}
+
 const button = document.getElementById("rouletteButton");
 const resultName = document.getElementById("resultName");
 const resultKana = document.getElementById("resultKana");
@@ -48,6 +57,7 @@ function updateSoundButton() {
 soundToggleBtn.addEventListener("click", () => {
     soundEnabled = !soundEnabled;
     try { localStorage.setItem(SOUND_KEY, soundEnabled ? "1" : "0"); } catch (e) { /* 無視 */ }
+    trackEvent("toggle_sound", { enabled: soundEnabled });
     updateSoundButton();
 });
 
@@ -224,6 +234,7 @@ japanMap.addEventListener("click", (e) => {
     const code = parseInt(g.getAttribute("data-code"), 10);
     const region = PREF_REGION[code - 1];
     if (!region) return;
+    trackEvent("map_click_region_filter", { region, clicked_pref: PREF_NAMES[code - 1] });
     regionSelect.value = region;
     regionSelect.dispatchEvent(new Event("change"));
 });
@@ -354,8 +365,10 @@ function toggleFavorite() {
     const idx = favorites.findIndex(f => f.name === currentPick.name && f.pref === currentPick.pref);
     if (idx >= 0) {
         favorites.splice(idx, 1);
+        trackEvent("remove_favorite", { name: currentPick.name, pref: currentPick.pref });
     } else {
         favorites.unshift(currentPick);
+        trackEvent("add_favorite", { name: currentPick.name, pref: currentPick.pref });
     }
     saveFavorites();
     updateFavoriteButtonState();
@@ -415,6 +428,7 @@ async function shareResult() {
     if (navigator.share) {
         try {
             await navigator.share({ text });
+            trackEvent("share", { method: "web_share", name: currentPick.name, pref: currentPick.pref });
             return;
         } catch (e) {
             if (e && e.name === "AbortError") return; // キャンセル時は何もしない
@@ -425,8 +439,10 @@ async function shareResult() {
     try {
         await navigator.clipboard.writeText(text);
         shareStatus.textContent = "結果をコピーしました";
+        trackEvent("share", { method: "clipboard", name: currentPick.name, pref: currentPick.pref });
     } catch (e) {
         shareStatus.textContent = text;
+        trackEvent("share", { method: "fallback_text", name: currentPick.name, pref: currentPick.pref });
     }
 }
 
@@ -442,6 +458,7 @@ function buildSearchUrl(item, keyword) {
 
 function openSearch(keyword) {
     if (!currentPick) return;
+    trackEvent("click_search_link", { keyword, name: currentPick.name, pref: currentPick.pref });
     window.open(buildSearchUrl(currentPick, keyword), "_blank", "noopener,noreferrer");
 }
 
@@ -479,6 +496,13 @@ function spinRoulette(filtered, finalPick) {
             showResult(finalPick);
             playLandingChime();
             addHistory(finalPick);
+            trackEvent("spin_roulette", {
+                mode: isPrefMode() ? "pref" : "city",
+                region_filter: regionSelect.value || "all",
+                pref_filter: prefSelect.value || "all",
+                result_pref: finalPick.pref,
+                result_name: finalPick.name
+            });
             button.disabled = false;
             return;
         }
