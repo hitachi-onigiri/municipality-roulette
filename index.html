@@ -16,7 +16,7 @@
     </script>
 
     <title>全国1741市町村ルーレット</title>
-    <meta name="description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。地方・都道府県・種別で絞り込みもできます。">
+    <meta name="description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。地方・都道府県・種別で絞り込みもできるほか、地名検索（漢字・かな・ローマ字・手書き）機能も搭載。">
 
     <!-- OGP（X/LINE/Facebookなどでシェアされたときの表示）
          ↓ 公開後、og:image と twitter:image は
@@ -24,14 +24,14 @@
          絶対URLに書き換えてください（相対パスだと反映されないSNSがあります） -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="全国1741市町村ルーレット">
-    <meta property="og:description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。">
+    <meta property="og:description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。地名検索（漢字・かな・ローマ字・手書き）機能も搭載。">
     <meta property="og:image" content="images/ogp.png">
     <meta property="og:locale" content="ja_JP">
 
     <!-- Twitter/X Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="全国1741市町村ルーレット">
-    <meta name="twitter:description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。">
+    <meta name="twitter:description" content="日本全国1,741の市区町村・47都道府県からランダムに1つ選ぶルーレットアプリ。地名検索（漢字・かな・ローマ字・手書き）機能も搭載。">
     <meta name="twitter:image" content="images/ogp.png">
 
     <link rel="stylesheet" href="style.css">
@@ -271,6 +271,7 @@
 
         <div id="rightPane">
             <div id="topRight">
+            <p id="searchPageLink"><a href="search.html">🔍 地名で調べる（漢字・かな・ローマ字検索）</a></p>
             <div id="filters">
                 <button id="soundToggleBtn" type="button" aria-pressed="true">🔊 音 ON</button>
 
@@ -323,7 +324,7 @@
                 <div id="result">
                     <p id="resultPref" lang="ja" style="visibility:hidden">&nbsp;</p>
                     <p id="resultKana" lang="ja">&nbsp;</p>
-                    <p id="resultName" lang="ja">ここに結果が出ます</p>
+                    <p id="resultName" lang="ja">ここに結果が<br>出ます</p>
                     <p id="resultRomaji" lang="en" translate="no">&nbsp;</p>
 
                     <div id="resultActions">

@@ -1,0 +1,265 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 24px 20px 60px;
+    background: #fafafa;
+    color: #222;
+}
+
+#pageHeader {
+    max-width: 900px;
+    margin: 0 auto 20px;
+    text-align: center;
+}
+
+#siteLink {
+    font-size: 13px;
+    color: #ff5a5f;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#siteLink:hover {
+    text-decoration: underline;
+}
+
+#pageHeader h1 {
+    font-size: 28px;
+    margin: 0;
+}
+
+#pageTitleRow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    margin: 6px 0 4px;
+}
+
+#backLink {
+    justify-self: start;
+}
+
+#pageSub {
+    font-size: 13px;
+    color: #777;
+    margin: 0;
+}
+
+main {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* 検索バー+結果（左）と手書き入力（右）を横並びに。
+   結果は左カラムの中に収め、右の手書き欄はスクロールしても隠れないよう追従させる */
+#searchTop {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 12px 0;
+}
+
+#searchLeft {
+    flex: 1 1 320px;
+    min-width: 280px;
+}
+
+#searchRight {
+    flex: 0 1 320px;
+    min-width: 280px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: center;
+    position: sticky;
+    top: 12px;
+}
+
+#searchInput {
+    width: 100%;
+    font-size: 18px;
+    padding: 14px 16px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+}
+
+#searchInput:focus {
+    border-color: #ff5a5f;
+}
+
+#handwriteNote {
+    font-size: 11px;
+    color: #999;
+    margin: 0 0 10px;
+    text-align: left;
+}
+
+#handwriteCanvas {
+    width: 100%;
+    max-width: 280px;
+    aspect-ratio: 1 / 1;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    background: #fff;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+#handwriteButtons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#handwriteButtons button {
+    font-size: 13px;
+    padding: 7px 16px;
+    background: #f4f4f4;
+    color: #444;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#handwriteButtons button:hover {
+    background: #eaeaea;
+}
+
+#handwriteStatus {
+    font-size: 13px;
+    color: #888;
+    margin: 10px 0 6px;
+}
+
+#handwriteCandidates {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.handwrite-candidate {
+    font-size: 24px;
+    padding: 8px 16px;
+    background: #eef6ff;
+    color: #1a5fa8;
+    border: 1px solid #bcdcff;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.handwrite-candidate:hover {
+    background: #dcecff;
+}
+
+#searchCount {
+    font-size: 13px;
+    color: #888;
+    margin: 8px 4px 0;
+}
+
+#searchResults {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#searchResults li {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 14px 18px;
+}
+
+.result-pref {
+    display: inline-block;
+    font-size: 12px;
+    color: #fff;
+    background: #ff5a5f;
+    padding: 2px 10px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+}
+
+.result-type {
+    display: inline-block;
+    font-size: 11px;
+    color: #666;
+    background: #eee;
+    padding: 1px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+}
+
+.result-kana {
+    font-size: 13px;
+    color: #888;
+    margin: 0 0 2px;
+}
+
+.result-name-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.result-name {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.result-romaji {
+    font-size: 14px;
+    color: #888;
+    margin: 4px 0 0;
+}
+
+.result-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.result-links a {
+    font-size: 12px;
+    color: #1a5fa8;
+    background: #eef6ff;
+    border: 1px solid #bcdcff;
+    border-radius: 8px;
+    padding: 5px 12px;
+    text-decoration: none;
+}
+
+.result-links a:hover {
+    background: #dcecff;
+}
+
+#backLink {
+    color: #ff5a5f;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+#backLink:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    #searchRight {
+        flex-basis: 100%;
+        position: static;
+    }
+}

@@ -21,6 +21,21 @@ h1 {
     flex-shrink: 0;
 }
 
+#searchPageLink {
+    text-align: right;
+    margin: 0 0 10px;
+}
+
+#searchPageLink a {
+    font-size: 13px;
+    color: #1a5fa8;
+    text-decoration: none;
+}
+
+#searchPageLink a:hover {
+    text-decoration: underline;
+}
+
 /* 画面を左右2分割。地図の下端と履歴/お気に入りの上端がそろうよう、
    「地図・フィルタ+結果」を1段目、「履歴/お気に入り」を2段目に配置するグリッド */
 #layout {
@@ -499,6 +514,11 @@ button:disabled {
     #mapWrap,
     #japanMap {
         max-height: 46vh;
+    }
+
+    #searchPageLink {
+        order: 0;
+        text-align: center;
     }
 
     /* デスクトップではグリッドに直接配置するため display:contents にしていたが、
