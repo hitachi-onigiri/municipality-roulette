@@ -49,6 +49,20 @@ body {
     margin: 0;
 }
 
+#contactLinkSub {
+    margin: 6px 0 0;
+}
+
+#contactLinkSub a {
+    font-size: 12px;
+    color: #1a5fa8;
+    text-decoration: none;
+}
+
+#contactLinkSub a:hover {
+    text-decoration: underline;
+}
+
 main {
     max-width: 900px;
     margin: 0 auto;

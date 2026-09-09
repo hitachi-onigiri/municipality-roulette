@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>お問い合わせ | 全国1741市町村ルーレット</title>
+    <meta name="description" content="全国1741市町村ルーレットへのご意見・不具合報告はこちらから。">
+
+    <link rel="stylesheet" href="contact.css">
+</head>
+
+<body>
+
+    <header id="pageHeader">
+        <a id="siteLink" href="index.html">全国1741市町村ルーレット</a>
+        <div id="pageTitleRow">
+            <a id="backLink" href="index.html">← ルーレットに戻る</a>
+            <h1>お問い合わせ</h1>
+        </div>
+        <p id="pageSub">ご意見・ご要望・不具合報告など、気軽に送ってください</p>
+    </header>
+
+    <main>
+        <form id="contactForm" action="https://formspree.io/f/xyeybolb" method="POST">
+
+            <label for="contactMessage">お問い合わせ内容<span class="required">必須</span></label>
+            <textarea id="contactMessage" name="message" rows="6" required
+                placeholder="不具合報告、ご感想、追加してほしい機能など、なんでもどうぞ"></textarea>
+
+            <label for="contactEmail">返信用メールアドレス<span class="optional">任意</span></label>
+            <input type="email" id="contactEmail" name="email" placeholder="返信が必要な場合のみ入力してください">
+
+            <!-- スパム対策用のハニーポット（人には見えない。ボットが埋めると送信をブロック） -->
+            <input type="text" name="_gotcha" id="contactHoneypot" tabindex="-1" autocomplete="off">
+
+            <button type="submit" id="contactSubmitBtn">送信する</button>
+
+            <p id="contactStatus" role="status" aria-live="polite">&nbsp;</p>
+        </form>
+    </main>
+
+    <script src="contact.js"></script>
+
+</body>
+
+</html>
