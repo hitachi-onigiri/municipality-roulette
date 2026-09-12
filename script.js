@@ -35,6 +35,9 @@ const modeCityRadio = document.getElementById("modeCity");
 const modePrefRadio = document.getElementById("modePref");
 const cityOnlyFilters = document.getElementById("cityOnlyFilters");
 const soundToggleBtn = document.getElementById("soundToggleBtn");
+const yearCurrentRadio = document.getElementById("yearCurrent");
+const year1999Radio = document.getElementById("year1999");
+const year1999Note = document.getElementById("year1999Note");
 
 // 都道府県名 -> 地図SVGの data-code の対応表（PREF_NAMESの並び順=コード1〜47から自動生成）
 const prefCodeMap = {};
@@ -114,7 +117,7 @@ function playLandingChime() {
 // 都道府県セレクトを地方に応じて作る
 function buildPrefOptions(region) {
     const prefs = [...new Set(
-        municipalities
+        getActiveMunicipalities()
             .filter(m => !region || prefRegionByCode(m.p) === region)
             .map(m => prefNameByCode(m.p))
     )];
@@ -139,6 +142,20 @@ function isPrefMode() {
     return modePrefRadio.checked;
 }
 
+// 現在「1999年」モードかどうか
+function isYear1999Mode() {
+    return year1999Radio.checked;
+}
+
+// 現在の年代設定に応じた市区町村データ配列を返す
+// （municipalities1999.js が読み込まれていない場合は現在のデータにフォールバックする）
+function getActiveMunicipalities() {
+    if (isYear1999Mode() && typeof municipalities1999 !== "undefined") {
+        return municipalities1999;
+    }
+    return municipalities;
+}
+
 // 現在の条件に合う候補を返す（市区町村モード or 都道府県だけモード）。
 // municipalities.js側はデータ量を減らすため短縮キー(n,k,r,p,t)で持っているので、
 // ここで扱いやすいフルネームのオブジェクトに組み立て直す。
@@ -161,7 +178,7 @@ function getFiltered() {
         .filter(c => c.checked)
         .map(c => c.value);
 
-    return municipalities
+    return getActiveMunicipalities()
         .filter(m => {
             if (region && prefRegionByCode(m.p) !== region) return false;
             if (pref && prefNameByCode(m.p) !== pref) return false;
@@ -183,6 +200,17 @@ function applyMode() {
 
 modeCityRadio.addEventListener("change", applyMode);
 modePrefRadio.addEventListener("change", applyMode);
+
+// 年代切り替え（現在 / 1999年）
+function applyYearMode() {
+    year1999Note.style.display = isYear1999Mode() ? "block" : "none";
+    buildPrefOptions(regionSelect.value);
+    updateStatus();
+    trackEvent("switch_year_mode", { year_mode: isYear1999Mode() ? "1999" : "current" });
+}
+
+yearCurrentRadio.addEventListener("change", applyYearMode);
+year1999Radio.addEventListener("change", applyYearMode);
 
 // 該当件数を表示し、ボタンの有効/無効を切り替える
 function updateStatus() {
@@ -498,6 +526,7 @@ function spinRoulette(filtered, finalPick) {
             addHistory(finalPick);
             trackEvent("spin_roulette", {
                 mode: isPrefMode() ? "pref" : "city",
+                year_mode: isYear1999Mode() ? "1999" : "current",
                 region_filter: regionSelect.value || "all",
                 pref_filter: prefSelect.value || "all",
                 result_pref: finalPick.pref,

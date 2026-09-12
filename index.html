@@ -284,6 +284,18 @@
                 </div>
 
                 <div class="filter-row">
+                    <span class="filter-label">年代</span>
+                    <div class="mode-radios">
+                        <label><input type="radio" name="targetYear" id="yearCurrent" value="current" checked>現在（1,741）</label>
+                        <label><input type="radio" name="targetYear" id="year1999" value="1999">1999年（平成の大合併前）</label>
+                    </div>
+                </div>
+                <p id="year1999Note" style="display:none; font-size:12px; color:#888; margin:-4px 0 10px;">
+                    ※ 1999年当時の市区町村です。多くはその後の合併で現在は存在しません。
+                    出典: 歴史的行政区域データセットβ版(CODH)・総務省全国地方公共団体コード
+                </p>
+
+                <div class="filter-row">
                     <label for="regionSelect">地方</label>
                     <select id="regionSelect">
                         <option value="">すべて</option>
@@ -365,6 +377,7 @@
     </div>
 
     <script src="municipalities.js"></script>
+    <script src="municipalities1999.js"></script>
     <script src="script.js"></script>
 
 </body>
