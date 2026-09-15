@@ -1,0 +1,124 @@
+/*
+ * モバイル専用レイアウト（画面幅780px以下）
+ * ------------------------------------------------------------
+ * PC版（style.css）は
+ *   ・#layout を2カラムのグリッドにする
+ *   ・#rightPane / #topRight を display:contents で「透明化」し、
+ *     孫要素（検索リンク・フィルタ・結果カード）を直接グリッドに配置する
+ * という作りになっている。
+ *
+ * このファイルではPC版の指定を上書きし、モバイルでは
+ *   ・#layout をただの縦積みFlexboxにする
+ *   ・display:contents の入れ子や、地図に結果カードを負のマージンで
+ *     重ねる演出は使わない
+ * というシンプルな構成に組み替える。結果カードの高さが変わっても
+ * （都道府県だけモード・文字数の違いなど）崩れないようにするため。
+ *
+ * HTML構造（index.html）はPC版と共通で、以下の親子関係になっている:
+ *   #layout
+ *     #leftPane（地図）
+ *     #rightPane
+ *       #topRight
+ *         #searchPageLink
+ *         #filters
+ *         #resultRow（結果カード + ルーレットボタン）
+ *       #recordsWrap（履歴・お気に入り）
+ */
+
+body {
+    overflow-y: auto;
+    padding: 16px 16px 40px;
+}
+
+h1 {
+    font-size: 22px;
+}
+
+/* ----- 全体を縦積みに ----- */
+#layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 100%;
+}
+
+/* ----- 地図（1段目） ----- */
+#leftPane {
+    width: 100%;
+    order: 0;
+}
+
+#mapWrap,
+#japanMap {
+    max-height: 46vh;
+}
+
+/* ----- 右カラムの中身（2段目以降） -----
+   PCのようにグリッドへ透明化する必要はないので、
+   ふつうに縦に並ぶブロックとして扱う */
+#rightPane {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    order: 1;
+}
+
+#topRight {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 結果＋ルーレットボタンを最初に、フィルタをその下に表示する。
+   （地図の演出に頼らず、単純な order だけで並び替える） */
+#resultRow {
+    order: 1;
+}
+
+#searchPageLink {
+    order: 2;
+    text-align: center;
+    margin: 0;
+}
+
+#filters {
+    order: 3;
+}
+
+/* ----- 結果カード＋ルーレットボタン ----- */
+#resultRow {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+#result {
+    text-align: center;
+    margin: 0;
+}
+
+#resultActions,
+#searchLinks {
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#rouletteButton {
+    width: 100%;
+    padding: 16px 26px;
+    font-size: 18px;
+}
+
+/* ----- 履歴・お気に入り（最後） ----- */
+#recordsWrap {
+    min-height: 0;
+}
+
+.tabPanel {
+    max-height: 240px;
+}
