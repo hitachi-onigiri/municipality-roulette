@@ -40,12 +40,22 @@ h1 {
     flex-direction: column;
     gap: 20px;
     max-width: 100%;
+    /* PC用スタイル（style.css）の flex: 1 1 auto; min-height: 0; を引き継いだままだと、
+       モバイルでは画面の高さに収まりきらないコンテンツを「1画面に収めよう」として
+       #leftPane（地図）側が高さ0まで潰れてしまう。
+       モバイルでは画面の高さに収めず、はみ出た分は body 側でスクロールさせたいので、
+       ここで明示的に無効化する。 */
+    flex: none;
 }
 
 /* ----- 地図（1段目） ----- */
 #leftPane {
     width: 100%;
     order: 0;
+    /* PC用の min-height: 0 / min-width: 0（グリッド内で潰れることを許可する指定）を、
+       モバイルでは打ち消す。これが無いと地図が高さ0に潰れて下の結果カードに隠れる。 */
+    min-height: auto;
+    min-width: auto;
 }
 
 #mapWrap,
