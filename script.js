@@ -224,6 +224,7 @@ regionSelect.addEventListener("change", () => {
     buildPrefOptions(regionSelect.value);
     updateStatus();
     updateRegionHighlight();
+restoreSharedResult();
 });
 
 prefSelect.addEventListener("change", updateStatus);
@@ -442,39 +443,146 @@ function renderFavorites() {
 favoriteButton.addEventListener("click", toggleFavorite);
 
 // ----- 共有 -----
+// 結果をURLに持たせることで、「共有されたリンクを開く→同じ結果を表示」を可能にする。
+function getShareUrl(item) {
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("result", item.pref === item.name ? `pref:${item.name}` : `${item.pref}:${item.name}`);
+    url.searchParams.set("year", isYear1999Mode() ? "1999" : "current");
+    url.searchParams.set("mode", item.pref === item.name ? "pref" : "city");
+    return url.toString();
+}
+
 function buildShareText(item) {
-    if (item.pref === item.name) {
-        return `市町村ルーレットで「${item.name}（${item.romaji}）」が当たりました！`;
-    }
-    return `市町村ルーレットで「${item.pref} ${item.name}（${item.romaji}）」が当たりました！`;
+    const place = item.pref === item.name
+        ? `${item.name}（${item.romaji}）`
+        : `${item.pref} ${item.name}（${item.romaji}）`;
+
+    return `🎲 今日の市町村ルーレット結果！\n\n${place} が選ばれました！\n\nあなたなら行ってみる？\n#市町村ルーレット`;
 }
 
 async function shareResult() {
     if (!currentPick) return;
-    const text = buildShareText(currentPick);
 
+    const text = buildShareText(currentPick);
+    const url = getShareUrl(currentPick);
+
+    // スマホ等：OSの共有シートを開く。URLも一緒に渡す。
     if (navigator.share) {
         try {
-            await navigator.share({ text });
-            trackEvent("share", { method: "web_share", name: currentPick.name, pref: currentPick.pref });
+            await navigator.share({
+                title: "全国1741市町村ルーレット",
+                text,
+                url
+            });
+            trackEvent("share", {
+                method: "web_share",
+                name: currentPick.name,
+                pref: currentPick.pref
+            });
             return;
         } catch (e) {
-            if (e && e.name === "AbortError") return; // キャンセル時は何もしない
+            if (e && e.name === "AbortError") return;
         }
     }
 
-    // Web Share APIが無い環境（PCのブラウザ等）ではクリップボードにコピー
+    // PC：Xの投稿画面を直接開く。
+    // 「共有」を押してから自分で貼り付ける手間を減らす。
+    const xText = `${text}\n\n${url}`;
+    const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(xText)}`;
+
     try {
-        await navigator.clipboard.writeText(text);
-        shareStatus.textContent = "結果をコピーしました";
-        trackEvent("share", { method: "clipboard", name: currentPick.name, pref: currentPick.pref });
+        window.open(xUrl, "_blank", "noopener,noreferrer");
+        trackEvent("share", {
+            method: "x_intent",
+            name: currentPick.name,
+            pref: currentPick.pref
+        });
+        shareStatus.textContent = "Xの投稿画面を開きました";
     } catch (e) {
-        shareStatus.textContent = text;
-        trackEvent("share", { method: "fallback_text", name: currentPick.name, pref: currentPick.pref });
+        try {
+            await navigator.clipboard.writeText(`${text}\n\n${url}`);
+            shareStatus.textContent = "共有文とリンクをコピーしました";
+            trackEvent("share", {
+                method: "clipboard",
+                name: currentPick.name,
+                pref: currentPick.pref
+            });
+        } catch (e2) {
+            shareStatus.textContent = url;
+        }
     }
 }
 
 shareButton.addEventListener("click", shareResult);
+
+// 共有URLを開いた場合、URL内の結果を復元する。
+function restoreSharedResult() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("result");
+    if (!raw) return;
+
+    const separator = raw.indexOf(":");
+    if (separator < 0) return;
+
+    const pref = decodeURIComponent(raw.slice(0, separator));
+    const name = decodeURIComponent(raw.slice(separator + 1));
+    const year = params.get("year");
+    const mode = params.get("mode");
+
+    if (year === "1999" && year1999Radio) {
+        year1999Radio.checked = true;
+        applyYearMode();
+    } else if (yearCurrentRadio) {
+        yearCurrentRadio.checked = true;
+        applyYearMode();
+    }
+
+    if (mode === "pref" && modePrefRadio) {
+        modePrefRadio.checked = true;
+        applyMode();
+    } else if (modeCityRadio) {
+        modeCityRadio.checked = true;
+        applyMode();
+    }
+
+    const found = getActiveMunicipalities().find(m => {
+        const mPref = prefNameByCode(m.p);
+        return m.n === name && mPref === pref;
+    });
+
+    // 都道府県モードの場合
+    if (mode === "pref") {
+        const code = PREF_NAMES.indexOf(name) + 1;
+        if (code > 0) {
+            showResult({
+                name,
+                kana: prefKanaByCode(code),
+                romaji: prefRomajiByCode(code),
+                pref: name,
+                region: prefRegionByCode(code),
+                type: "県"
+            });
+            highlightPref(name, "landed");
+        }
+        return;
+    }
+
+    if (found) {
+        const picked = {
+            name: found.n,
+            kana: found.k,
+            romaji: found.r,
+            pref,
+            region: prefRegionByCode(found.p),
+            type: found.t
+        };
+        showResult(picked);
+        highlightPref(pref, "landed");
+        addHistory(picked);
+    }
+}
 
 // ----- 観光・グルメ・宿泊の検索リンク -----
 function buildSearchUrl(item, keyword) {
